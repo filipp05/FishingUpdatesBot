@@ -78,9 +78,6 @@ async def monitor_changes(chat_id: int, bot: Bot):
             for product in alert_products:
                 response += (
                     f"🏷 *{product['title']}*\n"
-                    f"💰 Новая цена: {product['price']}₽\n"
-                    f"🖼 [Фото]({product['image_url']})\n"
-                    f"🔗 [Ссылка]({product['product_url']})\n\n"
                 )
 
             try:
