@@ -14,6 +14,7 @@ PRODUCTS_DISPLAY_NUM = 5  # Количество продуктов для от�
 
 dp = Dispatcher()
 logging.basicConfig(level=logging.INFO)
+active_tasks = {}
 
 
 @dp.message(Command("start"))
@@ -23,11 +24,40 @@ async def start_handler(message: Message):
     )
 
 
+@dp.message(Command("stop"))
+async def stop_handler(message: Message):
+    chat_id = message.chat.id
+    if chat_id in active_tasks:
+        task = active_tasks[chat_id]
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
+        del active_tasks[chat_id]
+        await message.reply("🛑 Мониторинг остановлен.")
+    else:
+        await message.reply("ℹ️ Нет активного мониторинга для остановки.")
+
+
 @dp.message(Command("parse"))
 async def parse_handler(message: Message):
     chat_id = message.chat.id
+
+    if chat_id in active_tasks:
+        old_task = active_tasks[chat_id]
+        old_task.cancel()
+        try:
+            await old_task
+        except asyncio.CancelledError:
+            pass
+        del active_tasks[chat_id]
+
+    # Создаем новую задачу мониторинга
+    task = asyncio.create_task(monitor_changes(chat_id, message.bot))
+    active_tasks[chat_id] = task
+
     await message.reply("🚀 Мониторинг запущен. Ожидайте уведомлений...")
-    asyncio.create_task(monitor_changes(chat_id, message.bot))
 
 
 async def monitor_changes(chat_id: int, bot: Bot):
