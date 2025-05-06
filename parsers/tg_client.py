@@ -88,21 +88,17 @@ async def monitor_changes(chat_id: int, bot: Bot):
             logging.error(f"Ошибка парсинга: {e}")
             continue
 
-        if prev_comp != temp_comp:
-            diffs = []
-            for i, (old, new) in enumerate(zip(prev_comp, temp_comp)):
-                if old != new:
-                    diffs.append((
-                        prev_products[i],
-                        temp_products[i]
-                    ))
+        diffs = []
+        for prod in temp_comp:
+            if prod not in prev_comp:
+                diffs.append(prod)
 
+        if diffs:
             logging.info("Обнаружены изменения в продуктах:")
-            for old, new in diffs:
-                logging.info("Было: %s", old)
-                logging.info("Стало: %s", new)
+            for new in diffs:
+                logging.info("Появился: %s", new)
 
-            alert_products = [new for _, new in diffs][::PRODUCTS_DISPLAY_NUM]
+            alert_products = [new for new in diffs][::PRODUCTS_DISPLAY_NUM]
             response = "🔔 **Обнаружены изменения!**\n\n"
 
             for product in alert_products:
